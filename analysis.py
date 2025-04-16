@@ -12,7 +12,8 @@ def kmeans(X, k, max_iters=100, tol=1e-4):
 
     for _ in range(max_iters):
         # Assign users to nearest centroid using cosine distance
-        distances = cosine_distance(X, centroids)
+        # distances = cosine_distance(X, centroids)
+        distances = eucledian_distance(X, centroids)
         cluster_labels = np.argmin(distances, axis=1)
 
         # Update centroids
@@ -34,8 +35,11 @@ def cosine_distance(a, b):
 
 # Function to calculate Euclidean distance
 def eucledian_distance(a, b):
-    # Calculate the Euclidean distance between two arrays
-    return np.sqrt(np.sum((a - b) ** 2, axis=1))
+    # Broadcasting to calculate distances
+    a_expanded = a[:, np.newaxis, :]  # shape (n_samples, 1, n_features)
+    b_expanded = b[np.newaxis, :, :]  # shape (1, n_clusters, n_features)
+    distances = np.linalg.norm(a_expanded - b_expanded, axis=2)  # shape (n_samples, n_clusters)
+    return distances
 
 # Function to plot clusters
 def plot_clusters(X, labels, centroids):
