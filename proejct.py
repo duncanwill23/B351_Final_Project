@@ -39,7 +39,7 @@ X = user_movie_matrix_filled.values
 labels, centroids = kmeans(X, k=3)
 
 # Plot clusters in 2D
-# plot_clusters(X, labels, centroids)
+plot_clusters(X, labels, centroids)
 
 #plot elbow curve
-# plot_elbow_curve(X)
+plot_elbow_curve(X)
