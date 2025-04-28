@@ -56,15 +56,15 @@ intra, inter = evaluate_clusters(X, labels)
 precision, recall = evaluate_recommendations_manual(ratings_merged, labels, user_movie_matrix)
 
 
-# print("Enter 3 movies you like:")
-# movie1 = input("Movie 1: ")
-# movie2 = input("Movie 2: ")
-# movie3 = input("Movie 3: ")
+print("Enter 3 movies you like:")
+movie1 = input("Movie 1: ")
+movie2 = input("Movie 2: ")
+movie3 = input("Movie 3: ")
 
-# movie_list = [movie1, movie2, movie3]
+movie_list = [movie1, movie2, movie3]
 
-# recommendations = recommend_movies(movie_list, ratings_merged, labels, user_movie_matrix)
+recommendations = recommend_movies(movie_list, ratings_merged, labels, user_movie_matrix)
 
-# print("\nBecause you liked those movies, you might also like:")
-# for rec in recommendations:
-#     print(f"- {rec}")
+print("\nBecause you liked those movies, you might also like:")
+for rec in recommendations:
+    print(f"- {rec}")
