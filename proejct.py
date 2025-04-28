@@ -1,23 +1,28 @@
 import pandas as pd
 import numpy as np
-from analysis import kmeans, cosine_distance, plot_clusters, plot_elbow_curve
+from analysis import kmeans, cosine_distance, plot_clusters, plot_elbow_curve, recommend_movies, evaluate_clusters, evaluate_recommendations_manual
 
 # Load CSVs
 ratings = pd.read_csv('dataset/ratings_small.csv')
 movies = pd.read_csv('dataset/movies_metadata.csv', low_memory=False)
+links = pd.read_csv('dataset/links_small.csv')
 
-# Convert timestamp adn drop duplicates
+# Convert timestamp and drop duplicates
 ratings['timestamp'] = pd.to_datetime(ratings['timestamp'], unit='s')
 ratings = ratings.drop_duplicates(subset=['userId', 'movieId'])
 
-# Clean movie IDs
+# Clean IDs for movies and links
 movies['id'] = pd.to_numeric(movies['id'], errors='coerce')
-movies = movies.dropna(subset=['id'])
-movies['id'] = movies['id'].astype(int)
+links['tmdbId'] = pd.to_numeric(links['tmdbId'], errors='coerce')
 
-# Merge ratings with movies metadata
-ratings_merged = ratings.merge(movies, how='left', left_on='movieId', right_on='id')
-ratings_merged = ratings_merged[['userId', 'movieId', 'rating', 'title', 'genres']]
+# Merge ratings with links to get tmdbId
+ratings_links = ratings.merge(links, how='left', on='movieId')
+
+# Merge ratings+links with movies_metadata on tmdbId = id
+ratings_merged = ratings_links.merge(movies, how='left', left_on='tmdbId', right_on='id')
+
+# Keep necessary columns
+ratings_merged = ratings_merged[['userId', 'movieId', 'rating', 'title', 'genres', 'original_language', 'release_date']]
 
 # Filter down to most active users and most rated movies
 top_users = ratings['userId'].value_counts().head(500).index
@@ -38,8 +43,28 @@ user_movie_matrix_filled = user_movie_matrix.apply(lambda row: row.fillna(row.me
 X = user_movie_matrix_filled.values
 labels, centroids = kmeans(X, k=3)
 
-# Plot clusters in 2D
-plot_clusters(X, labels, centroids)
+# Optional: plot clusters
+# plot_clusters(X, labels, centroids)
 
-#plot elbow curve
-plot_elbow_curve(X)
+# Optional: plot elbow curve
+# plot_elbow_curve(X)
+
+# After doing K-means:
+intra, inter = evaluate_clusters(X, labels)
+
+# To evaluate recommendation system:
+precision, recall = evaluate_recommendations_manual(ratings_merged, labels, user_movie_matrix)
+
+
+# print("Enter 3 movies you like:")
+# movie1 = input("Movie 1: ")
+# movie2 = input("Movie 2: ")
+# movie3 = input("Movie 3: ")
+
+# movie_list = [movie1, movie2, movie3]
+
+# recommendations = recommend_movies(movie_list, ratings_merged, labels, user_movie_matrix)
+
+# print("\nBecause you liked those movies, you might also like:")
+# for rec in recommendations:
+#     print(f"- {rec}")
