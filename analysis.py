@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
+from collections import Counter
 
 # K-means function
 def kmeans(X, k, max_iters=100, tol=1e-4):
@@ -36,9 +37,9 @@ def cosine_distance(a, b):
 # Function to calculate Euclidean distance
 def eucledian_distance(a, b):
     # Broadcasting to calculate distances
-    a_expanded = a[:, np.newaxis, :]  # shape (n_samples, 1, n_features)
-    b_expanded = b[np.newaxis, :, :]  # shape (1, n_clusters, n_features)
-    distances = np.linalg.norm(a_expanded - b_expanded, axis=2)  # shape (n_samples, n_clusters)
+    a_expanded = a[:, np.newaxis, :]  
+    b_expanded = b[np.newaxis, :, :]  
+    distances = np.linalg.norm(a_expanded - b_expanded, axis=2)
     return distances
 
 # Function to manually perform PCA (2D projection) using SVD
@@ -70,7 +71,7 @@ def plot_clusters(X, labels, centroids):
 
     # Add labels and title
     plt.title('User Clusters in 2D (Without sklearn PCA)')
-    plt.xlabel('PCA Component 1')
+    plt.xlabel('PCA Component 1') 
     plt.ylabel('PCA Component 2')
     plt.legend()
 
@@ -99,17 +100,6 @@ def plot_elbow_curve(X):
 
 
 def evaluate_clusters(X, labels):
-    """
-    Manually evaluate clustering quality: intra-cluster vs inter-cluster distances.
-    
-    Args:
-        X: Feature matrix (user-movie ratings filled)
-        labels: K-Means cluster labels
-
-    Returns:
-        intra_score: average distance between points in same cluster
-        inter_score: average distance between cluster centroids
-    """
 
     unique_labels = np.unique(labels)
     n_clusters = len(unique_labels)
@@ -145,19 +135,6 @@ def evaluate_clusters(X, labels):
     return intra_score, inter_score
 
 def evaluate_recommendations_manual(ratings_merged, labels, user_movie_matrix, top_n=5):
-    """
-    Manually evaluate recommendation precision and recall.
-    
-    Args:
-        ratings_merged: ratings + movie info
-        labels: K-Means cluster labels
-        user_movie_matrix: user-movie ratings pivot
-        top_n: number of recommendations
-
-    Returns:
-        avg_precision, avg_recall
-    """
-
     users = user_movie_matrix.index
     precision_list = []
     recall_list = []
@@ -177,14 +154,15 @@ def evaluate_recommendations_manual(ratings_merged, labels, user_movie_matrix, t
         test_movies = liked_movies[split_idx:]
 
         # Simulate recommendations
-        simulated_ratings = ratings_merged[
-            (ratings_merged['userId'] == user) &
-            (ratings_merged['title'].isin(train_movies))
-        ]
+        # simulated_ratings = ratings_merged[
+        #     (ratings_merged['userId'] == user) &
+        #     (ratings_merged['title'].isin(train_movies))
+        # ]
 
         cluster = labels[list(user_movie_matrix.index).index(user)]
         users_in_same_cluster = [u for u, c in zip(user_movie_matrix.index, labels) if c == cluster]
 
+        # Get ratings from users in the same cluster
         cluster_ratings = ratings_merged[
             (ratings_merged['userId'].isin(users_in_same_cluster)) &
             (~ratings_merged['title'].isin(train_movies))
@@ -215,6 +193,7 @@ def recommend_movies(movie_titles, ratings_merged, labels, user_movie_matrix, to
         ratings_merged['title'].str.lower().isin([title.lower() for title in movie_titles])
     ]
 
+    # Check if any movies were found
     if matching_movies.empty:
         print(f"No movies found matching your selections: {movie_titles}")
         return []
@@ -226,6 +205,7 @@ def recommend_movies(movie_titles, ratings_merged, labels, user_movie_matrix, to
     preferred_languages = []
     preferred_years = []
 
+    # Extract genres, languages, and years from the selected movies
     for idx, row in matching_movies.iterrows():
         genres = row['genres']
         if isinstance(genres, str):
@@ -245,9 +225,7 @@ def recommend_movies(movie_titles, ratings_merged, labels, user_movie_matrix, to
             except:
                 continue
 
-    # Mode values: most common genre, language, and year
-    from collections import Counter
-
+    # Step 2: Find the most common genres, language, and year
     preferred_genre_names = [item for item, count in Counter(preferred_genres).most_common(5)]
     preferred_language = Counter(preferred_languages).most_common(1)[0][0] if preferred_languages else 'en'
     preferred_year = int(sum(preferred_years) / len(preferred_years)) if preferred_years else None
@@ -258,6 +236,7 @@ def recommend_movies(movie_titles, ratings_merged, labels, user_movie_matrix, to
         (ratings_merged['rating'] >= 4.0)
     ]['userId'].unique()
 
+    # Check if any users liked the movies
     if len(users_who_like) == 0:
         print(f"No users rated your selected movies highly.")
         return []
@@ -270,6 +249,7 @@ def recommend_movies(movie_titles, ratings_merged, labels, user_movie_matrix, to
         print("No cluster info for users who liked the movies.")
         return []
 
+    # Check if any clusters were found
     target_clusters = set(liked_clusters)
     users_in_same_clusters = [user for user, cluster in user_to_cluster.items() if cluster in target_clusters]
 
@@ -287,6 +267,7 @@ def recommend_movies(movie_titles, ratings_merged, labels, user_movie_matrix, to
     # Step 5: Filter recommendations
     filtered_recommendations = []
 
+    # Filter based on genres, language, and year
     for idx, row in other_movies.iterrows():
         movie_genres = row['genres']
         if isinstance(movie_genres, str):
