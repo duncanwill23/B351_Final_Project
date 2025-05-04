@@ -26,7 +26,7 @@ def kmeans(X, k, max_iters=100, tol=1e-4):
 
     return cluster_labels, centroids
 
-# # Function to calculate cosine distance
+# Function to calculate cosine distance
 def cosine_distance(a, b):
     a_norm = a / np.linalg.norm(a, axis=1, keepdims=True)
     b_norm = b / np.linalg.norm(b, axis=1, keepdims=True)
@@ -139,6 +139,7 @@ def evaluate_recommendations_manual(ratings_merged, labels, user_movie_matrix, t
     precision_list = []
     recall_list = []
 
+    # Iterate through each user to evaluate recommendations by getting their liked movies
     for user in users:
         user_ratings = ratings_merged[ratings_merged['userId'] == user]
         liked_movies = user_ratings[user_ratings['rating'] >= 4.0]['title'].unique()
@@ -170,7 +171,7 @@ def evaluate_recommendations_manual(ratings_merged, labels, user_movie_matrix, t
 
         recommended = cluster_ratings['title'].value_counts().head(top_n).index.tolist()
 
-        # Precision and Recall manually
+        # Precision and Recall
         hits = len(set(recommended) & set(test_movies))
         precision = hits / top_n
         recall = hits / len(test_movies)
